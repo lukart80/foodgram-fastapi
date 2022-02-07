@@ -1,5 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from ..db_crud import write_object, read_all_objects, read_object_by_id
 from .schemas import IngredientIn, TagIn
