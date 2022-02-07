@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from .database import init_db
 
+from .recipes.routers import recipe_router
 app = FastAPI()
 
+app.include_router(recipe_router)
 
-@app.on_event('startup')
-async def on_startup():
-    await init_db()
+
+
