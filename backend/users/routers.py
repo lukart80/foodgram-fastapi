@@ -3,8 +3,9 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_session
 from .crud import write_user, read_all_users, read_user_by_id
-from .schemas import UserOut, UserIn
+from .schemas import UserOut, UserIn, UserLogin
 from .services import hash_string
+from .auth_services import check_user_credentials, create_jwt_token, decode_jwt_token
 
 user_router = APIRouter()
 
@@ -28,3 +29,18 @@ async def get_user_by_id(user_id: int, session: AsyncSession = Depends(get_sessi
     if user:
         return user
     raise HTTPException(status_code=404, detail='Такого пользователя нет')
+
+
+@user_router.post('/auth/token/login/')
+async def check_user(credentials: UserLogin, session: AsyncSession = Depends(get_session)):
+    is_correct = await check_user_credentials(session, credentials)
+    if is_correct:
+        token = create_jwt_token(credentials.email)
+        return {'auth_token': token}
+    raise HTTPException(status_code=404, detail='Неверные данные пользователя.')
+
+
+@user_router.post('/check/')
+async def check(token: dict):
+    decoded = decode_jwt_token(token['token'])
+    return {'rst': decoded}

@@ -21,3 +21,9 @@ class UserOut(UserBase):
 class UserIn(UserBase):
     """Сериализатор для создания пользователя."""
     password: str
+
+
+class UserLogin(BaseModel):
+    """Сериализатор для входа пользователя."""
+    email: EmailStr
+    password: str
