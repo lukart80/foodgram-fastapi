@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..database import get_session
-from .schemas import IngredientOut, IngredientIn
-from .crud import read_all_ingredients, write_ingredient
+from .schemas import IngredientOut, IngredientIn, TagOut, TagIn
+from .crud import read_all_ingredients, write_ingredient, read_all_tags, write_tag
 
 recipe_router = APIRouter()
 
@@ -17,3 +18,15 @@ async def get_ingredients(session: AsyncSession = Depends(get_session)):
 async def post_ingredient(ingredient_data: IngredientIn, session: AsyncSession = Depends(get_session)):
     ingredient = await write_ingredient(session, ingredient_data)
     return ingredient
+
+
+@recipe_router.get('/tags/', tags=['tags'], response_model=list[TagOut])
+async def get_tags(session: AsyncSession = Depends(get_session)):
+    tags = await read_all_tags(session)
+    return tags
+
+
+@recipe_router.post('/tags/', tags=['tags'], response_model=TagOut)
+async def post_tag(tag_data: TagIn, session: AsyncSession = Depends(get_session)):
+    tag = await write_tag(session, tag_data)
+    return tag
