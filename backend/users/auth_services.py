@@ -19,7 +19,7 @@ async def check_user_credentials(session: AsyncSession, credentials: UserLogin) 
     return results.scalars().first() is not None
 
 
-def create_jwt_token(email: str) -> str:
+async def create_jwt_token(email: str) -> str:
     """Создать токен JWT."""
     payload = {
         'email': email,
@@ -29,7 +29,7 @@ def create_jwt_token(email: str) -> str:
     return token
 
 
-def decode_jwt_token(token: str) -> dict:
+async def decode_jwt_token(token: str) -> dict:
     """Декодировать JWT токен."""
     try:
         decoded_token = jwt.decode(token, SECRET, ALGORYTHM)

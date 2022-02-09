@@ -24,7 +24,7 @@ class BasePermission:
     async def verify_credentials(self, credentials: HTTPAuthorizationCredentials) -> dict:
         if credentials.scheme != 'Token':
             raise HTTPException(status_code=403, detail='Неверная схема авторизации')
-        decoded_token = decode_jwt_token(credentials.credentials)
+        decoded_token = await decode_jwt_token(credentials.credentials)
         if decoded_token:
             return decoded_token
         raise HTTPException(status_code=403, detail='Неверные данные авторизации')

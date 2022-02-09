@@ -38,7 +38,7 @@ async def get_user_by_id(user_id: int, session: AsyncSession = Depends(get_sessi
 async def check_user(credentials: UserLogin, session: AsyncSession = Depends(get_session)):
     is_correct = await check_user_credentials(session, credentials)
     if is_correct:
-        token = create_jwt_token(credentials.email)
+        token = await create_jwt_token(credentials.email)
         return {'auth_token': token}
     raise HTTPException(status_code=404, detail='Неверные данные пользователя.')
 
