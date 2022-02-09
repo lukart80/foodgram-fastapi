@@ -10,13 +10,13 @@ async def read_all_objects(session: AsyncSession, model: Base) -> list[Base]:
     return results.scalars().all()
 
 
-async def write_object(session: AsyncSession, model: Base, data: BaseModel) -> Base:
-    """Создать объект модели."""
-    model_object = model(**data.dict())
-    session.add(model_object)
+async def write_object(session: AsyncSession, model: Base) -> Base:
+    """Сохранить модлель в базу данных."""
+
+    session.add(model)
     await session.commit()
-    await session.refresh(model_object)
-    return model_object
+    await session.refresh(model)
+    return model
 
 
 async def read_object_by_id(session: AsyncSession, model: Base, object_id: int) -> Base:

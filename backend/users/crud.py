@@ -13,8 +13,8 @@ async def read_all_users(session: AsyncSession) -> list[User]:
 
 async def write_user(session: AsyncSession, user_data: UserIn) -> User:
     """Создать нового пользователя."""
-    user = await write_object(session, User, user_data)
-    return user
+    user = User(**user_data.dict())
+    return await write_object(session, user)
 
 
 async def read_user_by_id(session: AsyncSession, user_id: int) -> User:

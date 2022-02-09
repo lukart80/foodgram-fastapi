@@ -13,9 +13,8 @@ async def read_all_ingredients(session: AsyncSession) -> list[Ingredient]:
 
 async def write_ingredient(session: AsyncSession, ingredient_data: IngredientIn) -> Ingredient:
     """Создать новый ингредиент."""
-    ingredient = await write_object(session, Ingredient, ingredient_data)
-
-    return ingredient
+    ingredient = Ingredient(**ingredient_data.dict())
+    return await write_object(session, ingredient)
 
 
 async def read_ingredient_by_id(session: AsyncSession, ingredient_id: int) -> Ingredient:
@@ -39,5 +38,6 @@ async def read_tag_by_id(session: AsyncSession, tag_id: int) -> Tag:
 
 async def write_tag(session: AsyncSession, tag_data: TagIn) -> Tag:
     """Создать тег."""
-    tag = await write_object(session, Tag, tag_data)
-    return tag
+    tag = Tag(**tag_data.dict())
+    return await write_object(session, tag)
+

@@ -26,7 +26,7 @@ async def post_user(user_data: UserIn, session: AsyncSession = Depends(get_sessi
     return user
 
 
-@user_router.get('/users/{user_id}', tags=['users'], response_model=UserOut)
+@user_router.get('/users/{user_id}/', tags=['users'], response_model=UserOut)
 async def get_user_by_id(user_id: int, session: AsyncSession = Depends(get_session)):
     user = await read_user_by_id(session, user_id)
     if user:
