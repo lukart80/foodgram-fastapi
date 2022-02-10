@@ -1,26 +1,28 @@
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 
-from .auth_services import AuthService
+from backend.services.auth import AuthService
 
 
-class BasePermission:
+class TokenManager:
+    """Позволяет получить декодированный токен из HTTP заголовка Authorization. Если параметр token_required=False,
+     при пустом загаловке вернется None."""
 
     def __init__(self, token_required=True):
         self.token_required = token_required
 
     async def __call__(self, request: Request):
-        if self.token_required:
-            credentials: HTTPAuthorizationCredentials = await self.get_auth_credentials(request)
+        credentials_string: str = request.headers.get('Authorization')
+        if not self.token_required and credentials_string is None:
+            return None
 
-            return await self.verify_credentials(credentials)
-        return None
+        credentials: HTTPAuthorizationCredentials = await self.parse_credentials_string(credentials_string)
+        return await self.verify_credentials(credentials)
 
-    async def get_auth_credentials(self, request: Request) -> HTTPAuthorizationCredentials:
-        authorization_string: str = request.headers.get('Authorization')
-        if not authorization_string:
+    async def parse_credentials_string(self, credentials_string: str) -> HTTPAuthorizationCredentials:
+        if not credentials_string:
             raise HTTPException(status_code=403, detail='Недостаточно прав доступа')
-        authorization: list[str] = authorization_string.split()
+        authorization: list[str] = credentials_string.split()
         if len(authorization) != 2:
             raise HTTPException(status_code=403, detail='Неверные данные авторизации.')
         return HTTPAuthorizationCredentials(scheme=authorization[0], credentials=authorization[1])

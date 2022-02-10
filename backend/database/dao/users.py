@@ -1,9 +1,9 @@
 from sqlalchemy.future import select
 
-from .services import hash_string
-from ..db_crud import GenericDao
-from .models import User
-from .schemas import UserLogin
+from backend.utils.hash import hash_string
+from backend.database.dao.generic import GenericDao
+from backend.database.models.users import User
+from backend.schemas.users import UserLogin
 
 
 class UserDao(GenericDao):

@@ -3,7 +3,7 @@ from sqlalchemy.future import select
 
 from sqlalchemy.orm import sessionmaker
 
-from .database import Base, engine
+from backend.database.database import Base, engine
 
 
 class GenericDao:

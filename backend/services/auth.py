@@ -1,11 +1,6 @@
 from time import time
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 import jwt
 from jwt.exceptions import InvalidSignatureError, DecodeError
-from .models import User
-from .schemas import UserLogin
-from .services import hash_string
 
 SECRET = 'super_secret!'
 ALGORYTHM = 'HS256'

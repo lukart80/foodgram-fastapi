@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends
 from fastapi import HTTPException
 
-from .models import User
-from .user_service import UserService
+from backend.database.models.users import User
+from backend.services.users import UserService
 
-from .crud import UserDao
-from .schemas import UserOut, UserIn, UserLogin
-from .auth_services import AuthService
+from backend.database.dao.users import UserDao
+from backend.schemas.users import UserOut, UserIn, UserLogin
+from backend.services.auth import AuthService
 
-from .auth_bearer import BasePermission
+from backend.token.manager import TokenManager
 
 user_router = APIRouter()
 
@@ -42,10 +42,10 @@ async def check_user(credentials: UserLogin):
 
 
 @user_router.post('/check/')
-async def check(user_data: dict = Depends(BasePermission())):
+async def check(user_data: dict = Depends(TokenManager())):
     return {'rst': user_data}
 
 
 @user_router.get('/auth/users/me/', tags=['users'], response_model=UserOut)
-async def get_current_user(user_data: dict = Depends(BasePermission())):
+async def get_current_user(user_data: dict = Depends(TokenManager())):
     return await UserDao.read_object_by_id(user_data.get('user_id'))
