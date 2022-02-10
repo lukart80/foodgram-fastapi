@@ -1,23 +1,19 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
-from ..db_crud import write_object, read_all_objects, read_object_by_id
+from .services import hash_string
+from ..db_crud import GenericDao
 from .models import User
-from .schemas import UserIn
+from .schemas import UserLogin
 
 
-async def read_all_users(session: AsyncSession) -> list[User]:
-    """Получить список всех пользователей."""
-    users = await read_all_objects(session, User)
-    return users
+class UserDao(GenericDao):
+    MODEL_CLASS = User
 
-
-async def write_user(session: AsyncSession, user_data: UserIn) -> User:
-    """Создать нового пользователя."""
-    user = User(**user_data.dict())
-    return await write_object(session, user)
-
-
-async def read_user_by_id(session: AsyncSession, user_id: int) -> User:
-    """Получить пользователя по id."""
-    user = await read_object_by_id(session, User, user_id)
-    return user
+    @classmethod
+    async def read_user_by_credentials(cls, credentials: UserLogin):
+        async with cls.async_session() as session:
+            async with session.begin():
+                hashed_password = hash_string(credentials.password)
+                statement = select(User).filter_by(email=credentials.email, password=hashed_password)
+                results = await session.execute(statement)
+                return results.scalars().first()

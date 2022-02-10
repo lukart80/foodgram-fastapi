@@ -1,48 +1,51 @@
 from fastapi import APIRouter, Depends
 from fastapi import HTTPException
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from .models import User
+from .user_service import UserService
 
-from ..database import get_session
-from .crud import write_user, read_all_users, read_user_by_id
+from .crud import UserDao
 from .schemas import UserOut, UserIn, UserLogin
-from .services import hash_string
-from .auth_services import check_user_credentials, create_jwt_token
+from .auth_services import AuthService
+
 from .auth_bearer import BasePermission
 
 user_router = APIRouter()
 
 
 @user_router.get('/users/', tags=['users'], response_model=list[UserOut])
-async def get_all_users(session: AsyncSession = Depends(get_session)):
-    users = await read_all_users(session)
+async def get_all_users(users=Depends(UserDao.read_all_objects)):
     return users
 
 
 @user_router.post('/users/', tags=['users'], response_model=UserOut)
-async def post_user(user_data: UserIn, session: AsyncSession = Depends(get_session)):
-    user_data.password = hash_string(user_data.password)
-    user = await write_user(session, user_data)
+async def post_user(user_data: UserIn):
+    user = await UserService.create_user(user_data)
     return user
 
 
 @user_router.get('/users/{user_id}/', tags=['users'], response_model=UserOut)
-async def get_user_by_id(user_id: int, session: AsyncSession = Depends(get_session)):
-    user = await read_user_by_id(session, user_id)
+async def get_user_by_id(user_id: int):
+    user = await UserDao.read_object_by_id(user_id)
     if user:
         return user
     raise HTTPException(status_code=404, detail='Такого пользователя нет')
 
 
 @user_router.post('/auth/token/login/')
-async def check_user(credentials: UserLogin, session: AsyncSession = Depends(get_session)):
-    is_correct = await check_user_credentials(session, credentials)
-    if is_correct:
-        token = await create_jwt_token(credentials.email)
+async def check_user(credentials: UserLogin):
+    user: User = await UserDao.read_user_by_credentials(credentials)
+    if user:
+        token = await AuthService.create_jwt_token(user.id)
         return {'auth_token': token}
     raise HTTPException(status_code=404, detail='Неверные данные пользователя.')
 
 
-@user_router.post('/check/', dependencies=[Depends(BasePermission())])
-async def check():
-    return {'rst': 'hello'}
+@user_router.post('/check/')
+async def check(user_data: dict = Depends(BasePermission())):
+    return {'rst': user_data}
+
+
+@user_router.get('/auth/users/me/', tags=['users'], response_model=UserOut)
+async def get_current_user(user_data: dict = Depends(BasePermission())):
+    return await UserDao.read_object_by_id(user_data.get('user_id'))

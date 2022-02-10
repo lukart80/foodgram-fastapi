@@ -1,26 +1,43 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
-from .database import Base
+
+from sqlalchemy.orm import sessionmaker
+
+from .database import Base, engine
 
 
-async def read_all_objects(session: AsyncSession, model: Base) -> list[Base]:
-    """Получить все объекты модели"""
-    results = await session.execute(select(model))
-    return results.scalars().all()
+class GenericDao:
+    MODEL_CLASS: Base = None
+    async_session: AsyncSession = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
+    @classmethod
+    async def read_all_objects(cls) -> list[Base]:
+        """Получить все объекты модели."""
 
-async def write_object(session: AsyncSession, model: Base) -> Base:
-    """Сохранить модлель в базу данных."""
+        async with cls.async_session() as session:
+            results = await session.execute(select(cls.MODEL_CLASS))
+            await session.commit()
+        return results.scalars().all()
 
-    session.add(model)
-    await session.commit()
-    await session.refresh(model)
-    return model
+    @classmethod
+    async def write_object(cls, model: Base) -> Base:
+        """Сохранить модель в базу данных."""
+        async with cls.async_session() as session:
+            async with session.begin():
+                session.add(model)
 
+                await session.commit()
 
-async def read_object_by_id(session: AsyncSession, model: Base, object_id: int) -> Base:
-    """Получить объект модели по id."""
-    statement = select(model).filter_by(id=object_id)
-    results = await session.execute(statement)
-    return results.scalars().first()
+        return model
+
+    @classmethod
+    async def read_object_by_id(cls, object_id: int) -> Base:
+        """Получить объект по id."""
+        async with cls.async_session() as session:
+            async with session.begin():
+                statement = select(cls.MODEL_CLASS).filter_by(id=object_id)
+                results = await session.execute(statement)
+                await session.commit()
+        return results.scalars().first()
