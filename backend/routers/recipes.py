@@ -6,6 +6,7 @@ from backend.database.dao.tags import TagDao
 from backend.database.models.ingredients import Ingredient
 from backend.database.models.tags import Tag
 from backend.schemas.recipes import RecipeIn, RecipeOut, IngredientOutRecipe, IngredientInRecipe
+from backend.services.recipes import RecipeServices
 from backend.token.manager import TokenManager
 from backend.database.dao.recipes import RecipeDao
 from backend.database.dao.users import UserDao
@@ -17,19 +18,7 @@ recipes_router = APIRouter()
 @recipes_router.get('/recipes/', tags=['recipes'], response_model=list[RecipeOut])
 async def get_recipes():
     recipes = await RecipeDao.read_all_objects_eager()
-    results = [RecipeOut(author=recipe.author,
-                         id=recipe.id,
-                         tags=recipe.tags,
-                         name=recipe.name,
-                         image=recipe.image,
-                         text=recipe.text,
-                         cooking_time=recipe.cooking_time,
-                         ingredients=[IngredientOutRecipe(id=recipe_ingredient.ingredient.id,
-                                                          name=recipe_ingredient.ingredient.name,
-                                                          measurement_unit=recipe_ingredient.ingredient.measurement_unit,
-                                                          amount=recipe_ingredient.amount)
-                                      for recipe_ingredient in recipe.recipe_ingredients]
-                         ) for recipe in recipes]
+    results = [await RecipeServices.generate_response_dto(recipe) for recipe in recipes]
     return results
 
 
@@ -58,3 +47,11 @@ async def post_recipe(recipe_data: RecipeIn, user_data: dict = Depends(TokenMana
 
     await UserDao.write_object(recipe)
     return {'rst': 'OK'}
+
+
+@recipes_router.get('/recipes/{recipe_id}', tags=['recipes'], response_model=RecipeOut)
+async def get_recipe_by_id(recipe_id: int):
+    recipe: Recipe = await RecipeDao.read_object_by_id_eager(recipe_id)
+    if recipe:
+        return await RecipeServices.generate_response_dto(recipe)
+    raise HTTPException(detail='Рецепт не найден', status_code=404)
