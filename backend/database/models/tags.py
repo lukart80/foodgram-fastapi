@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 
 from backend.database.database import Base
 
@@ -11,3 +12,4 @@ class Tag(Base):
     name = Column(String, nullable=False, index=True)
     color = Column(String, nullable=False)
     slug = Column(String, unique=True, nullable=False)
+    recipes = relationship('User', secondary='recipe_tags', back_populates='tags')

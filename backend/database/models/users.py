@@ -1,4 +1,6 @@
 from sqlalchemy import Integer, String, Column
+from sqlalchemy.orm import relationship
+
 from backend.database.database import Base
 
 
@@ -13,3 +15,4 @@ class User(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     password = Column(String, nullable=False)
+    recipes = relationship('Recipe', back_populates='author')
