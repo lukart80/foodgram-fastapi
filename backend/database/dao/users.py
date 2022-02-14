@@ -13,7 +13,7 @@ class UserDao(GenericDao):
     async def read_user_by_credentials(cls, credentials: UserLogin):
         async with cls.async_session() as session:
             async with session.begin():
-                hashed_password = hash_string(credentials.password)
+                hashed_password = await hash_string(credentials.password)
                 statement = select(User).filter_by(email=credentials.email, password=hashed_password)
                 results = await session.execute(statement)
                 return results.scalars().first()
